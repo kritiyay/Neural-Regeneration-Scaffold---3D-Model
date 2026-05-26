@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Neural Regeneration Scaffold - 3D Model</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: #0f0f10;
+      color: #d3d1c7;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 2rem 1rem;
+    }
+    h1 {
+      font-size: 17px;
+      font-weight: 500;
+      color: #f0ede6;
+      text-align: center;
+      margin-bottom: 4px;
+      letter-spacing: -0.01em;
+    }
+    p.sub {
+      font-size: 12px;
+      color: #888780;
+      text-align: center;
+      margin-bottom: 14px;
+    }
+    .legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 16px;
+      justify-content: center;
+      margin-bottom: 14px;
+      font-size: 11px;
+      color: #b4b2a9;
+    }
+    .legend span {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    canvas {
+      width: 100%;
+      max-width: 780px;
+      height: 520px;
+      display: block;
+      border-radius: 10px;
+      border: 0.5px solid #2c2c2a;
+      cursor: grab;
+    }
+    canvas:active { cursor: grabbing; }
+    .hint {
+      font-size: 11px;
+      color: #5f5e5a;
+      text-align: center;
+      margin-top: 8px;
+    }
+    .credit {
+      font-size: 10px;
+      color: #444441;
+      text-align: center;
+      margin-top: 20px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Theoretical Bioactive Aligned Neural Regeneration Scaffold</h1>
+  <p class="sub">Integrated Microfluidic Growth Factor Delivery System for Spinal Cord Injury Repair</p>
+
+  <div class="legend">
+    <span><span class="dot" style="background:#5DCAA5"></span>PLGA-GelMA matrix</span>
+    <span><span class="dot" style="background:#7F77DD"></span>Aligned microchannels (150–250 µm)</span>
+    <span><span class="dot" style="background:#D85A30"></span>Microfluidic network (50–100 µm)</span>
+    <span><span class="dot" style="background:#EF9F27"></span>Growth factor reservoirs</span>
+    <span><span class="dot" style="background:#85B7EB"></span>Laminin surface coating</span>
+    <span><span class="dot" style="background:#F7C1C1"></span>Regenerating axons</span>
+  </div>
+
+  <canvas id="c3d"></canvas>
+  <p class="hint">Drag to rotate &nbsp;·&nbsp; Scroll to zoom</p>
+  <p class="credit">Kriti Dwivedi — Stratford Preparatory Blackford, 2026</p>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script>
+    const canvas = document.getElementById('c3d');
+    const W = Math.min(canvas.parentElement.clientWidth, 780);
+    const H = 520;
+    canvas.width = W * devicePixelRatio;
+    canvas.height = H * devicePixelRatio;
+
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true });
+    renderer.setPixelRatio(devicePixelRatio);
+    renderer.setSize(W, H);
+    renderer.setClearColor(0x0f0f10, 1);
+
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(38, W / H, 0.01, 100);
+    camera.position.set(0, 1.4, 5.8);
+    camera.lookAt(0, 0, 0);
+
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.55);
+    scene.add(ambLight);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    dirLight.position.set(3, 5, 4);
+    scene.add(dirLight);
+    const dirLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    dirLight2.position.set(-3, -2, -3);
+    scene.add(dirLight2);
+
+    const root = new THREE.Group();
+    scene.add(root);
+
+    const scaffoldLen = 3.2;
+    const scaffoldR = 0.78;
+
+    function mat(color, opacity = 1, side = THREE.FrontSide) {
+      return new THREE.MeshPhongMaterial({ color, opacity, transparent: opacity < 1, side, shininess: 60 });
+    }
+
+    const shellGeo = new THREE.CylinderGeometry(scaffoldR, scaffoldR, scaffoldLen, 72, 1, true);
+    const shell = new THREE.Mesh(shellGeo, mat(0x5DCAA5, 0.18, THREE.DoubleSide));
+    shell.rotation.z = Math.PI / 2;
+    root.add(shell);
+
+    const capMat = mat(0x5DCAA5, 0.22);
+    [-1, 1].forEach(s => {
+      const cap = new THREE.Mesh(new THREE.CircleGeometry(scaffoldR, 64), capMat);
+      cap.position.x = s * scaffoldLen / 2;
+      cap.rotation.z = Math.PI / 2;
+      cap.rotation.y = s === -1 ? 0 : Math.PI;
+      root.add(cap);
+    });
+
+    const ringMat = mat(0x085041, 0.7);
+    [-1, -0.4, 0.3, 1].forEach(t => {
+      const r = new THREE.Mesh(new THREE.TorusGeometry(scaffoldR, 0.018, 16, 72), ringMat);
+      r.position.x = t * (scaffoldLen / 2) * 0.82;
+      r.rotation.y = Math.PI / 2;
+      root.add(r);
+    });
+
+    const laminGeo = new THREE.CylinderGeometry(scaffoldR + 0.03, scaffoldR + 0.03, scaffoldLen * 0.96, 72, 1, true);
+    const lamin = new THREE.Mesh(laminGeo, mat(0x85B7EB, 0.3, THREE.DoubleSide));
+    lamin.rotation.z = Math.PI / 2;
+    root.add(lamin);
+
+    const chColors = [0x7F77DD, 0x9B94E8, 0x534AB7];
+    const chPositions = [
+      [0, 0], [0.32, 0], [-0.32, 0],
+      [0, 0.32], [0, -0.32],
+      [0.22, 0.22], [-0.22, 0.22], [0.22, -0.22], [-0.22, -0.22],
+      [0.44, 0], [-0.44, 0], [0, 0.44], [0, -0.44],
+      [0.3, 0.35], [-0.3, 0.35], [0.3, -0.35], [-0.3, -0.35],
+    ];
+    chPositions.forEach(([y, z], i) => {
+      if (Math.sqrt(y*y + z*z) > scaffoldR - 0.13) return;
+      const geo = new THREE.CylinderGeometry(0.058, 0.058, scaffoldLen + 0.06, 20, 1, true);
+      const m = new THREE.Mesh(geo, mat(chColors[i % 3], 0.88, THREE.DoubleSide));
+      m.rotation.z = Math.PI / 2;
+      m.position.set(0, y, z);
+      root.add(m);
+      [-1, 1].forEach(s => {
+        const end = new THREE.Mesh(new THREE.RingGeometry(0, 0.058, 20), mat(chColors[i % 3], 0.92));
+        end.position.set(s * (scaffoldLen / 2 + 0.03), y, z);
+        end.rotation.z = Math.PI / 2;
+        root.add(end);
+      });
+    });
+
+    [
+      { y: 0.52, z: 0 }, { y: -0.52, z: 0 },
+      { y: 0, z: 0.52 }, { y: 0, z: -0.52 },
+    ].forEach(({ y, z }) => {
+      const fm = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.024, 0.024, scaffoldLen * 0.88, 12, 1, true),
+        mat(0xD85A30, 0.85, THREE.DoubleSide)
+      );
+      fm.rotation.z = Math.PI / 2;
+      fm.position.set(0, y, z);
+      root.add(fm);
+      const tapMat = new THREE.LineBasicMaterial({ color: 0xBA7517 });
+      const nTaps = 7;
+      for (let i = 0; i < nTaps; i++) {
+        const px = -scaffoldLen * 0.38 + i * (scaffoldLen * 0.76 / (nTaps - 1));
+        const dy = y !== 0 ? (y > 0 ? -0.18 : 0.18) : (z > 0 ? -0.18 : 0.18);
+        const dz = z !== 0 ? (z > 0 ? -0.18 : 0.18) : 0;
+        const tapGeo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(px, y, z),
+          new THREE.Vector3(px, y + (y !== 0 ? dy : 0), z + (z !== 0 ? dz : 0))
+        ]);
+        root.add(new THREE.Line(tapGeo, tapMat));
+      }
+    });
+
+    const resMat = mat(0xEF9F27, 0.95);
+    [-scaffoldLen * 0.42, 0, scaffoldLen * 0.42].forEach(x => {
+      const s1 = new THREE.Mesh(new THREE.SphereGeometry(0.092, 18, 14), resMat);
+      s1.position.set(x, 0.52, 0.52);
+      root.add(s1);
+      const s2 = new THREE.Mesh(new THREE.SphereGeometry(0.082, 18, 14), resMat);
+      s2.position.set(x, -0.52, -0.52);
+      root.add(s2);
+    });
+
+    const crossMat = new THREE.LineBasicMaterial({ color: 0x378ADD });
+    [-1.1, -0.3, 0.55, 1.3].forEach(x => {
+      [0, 45, 90, 135].forEach(deg => {
+        const rad = deg * Math.PI / 180;
+        const r = scaffoldR - 0.01;
+        const geo = new THREE.BufferGeometry().setFromPoints([
+          new THREE.Vector3(x, Math.cos(rad) * r, Math.sin(rad) * r),
+          new THREE.Vector3(x, Math.cos(rad + Math.PI) * r, Math.sin(rad + Math.PI) * r),
+        ]);
+        root.add(new THREE.Line(geo, crossMat));
+      });
+    });
+
+    const axonMat = new THREE.MeshPhongMaterial({ color: 0xF7C1C1, shininess: 40 });
+    [-0.14, 0, 0.14].forEach(off => {
+      const curve = new THREE.CatmullRomCurve3([
+        new THREE.Vector3(-scaffoldLen / 2 - 0.3, off, off * 0.5),
+        new THREE.Vector3(-scaffoldLen / 2 + 0.4, off * 1.1, off * 0.7),
+        new THREE.Vector3(0, off * 0.9, off * 0.6),
+        new THREE.Vector3(scaffoldLen / 2 - 0.3, off * 1.05, off * 0.8),
+        new THREE.Vector3(scaffoldLen / 2 + 0.28, off * 0.95, off * 0.55),
+      ]);
+      root.add(new THREE.Mesh(new THREE.TubeGeometry(curve, 40, 0.016, 8, false), axonMat));
+    });
+
+    root.rotation.x = 0.18;
+    root.rotation.y = -0.38;
+
+    let dragging = false, lastX = 0, lastY = 0, velX = 0, velY = 0;
+    canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; velX = velY = 0; });
+    window.addEventListener('mouseup', () => { dragging = false; });
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      velX = (e.clientX - lastX) * 0.008;
+      velY = (e.clientY - lastY) * 0.006;
+      root.rotation.y += velX;
+      root.rotation.x = Math.max(-1.1, Math.min(1.1, root.rotation.x + velY));
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    canvas.addEventListener('touchstart', e => { const t = e.touches[0]; dragging = true; lastX = t.clientX; lastY = t.clientY; }, { passive: true });
+    canvas.addEventListener('touchend', () => { dragging = false; });
+    canvas.addEventListener('touchmove', e => {
+      if (!dragging) return;
+      const t = e.touches[0];
+      velX = (t.clientX - lastX) * 0.008;
+      velY = (t.clientY - lastY) * 0.006;
+      root.rotation.y += velX;
+      root.rotation.x = Math.max(-1.1, Math.min(1.1, root.rotation.x + velY));
+      lastX = t.clientX; lastY = t.clientY;
+    }, { passive: true });
+    canvas.addEventListener('wheel', e => {
+      camera.position.z = Math.max(2.5, Math.min(10, camera.position.z + e.deltaY * 0.008));
+      e.preventDefault();
+    }, { passive: false });
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (!dragging) {
+        velX *= 0.92; velY *= 0.92;
+        root.rotation.y += velX + 0.003;
+        root.rotation.x = Math.max(-1.1, Math.min(1.1, root.rotation.x + velY));
+      }
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
